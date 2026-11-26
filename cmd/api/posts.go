@@ -104,6 +104,7 @@ func getPostFromCtx(r *http.Request) store.Post {
 }
 
 type UpdatePostPayload struct {
+	Version *int    `json:"version" validate:"omitempty,min=1"`
 	Title   *string `json:"title" validate:"omitempty,max=100"`
 	Content *string `json:"content" validate:"omitempty,max=1000"`
 }
@@ -119,6 +120,10 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		app.badRequestResponse(w, r, err)
 		return
 	}
+	if payload.Version != nil && *payload.Version != post.Version {
+		writeJsonError(w, http.StatusConflict, store.ErrEditConflict.Error())
+		return
+	}
 	if payload.Title != nil {
 		post.Title = *payload.Title
 	}
@@ -126,7 +131,9 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		post.Content = *payload.Content
 	}
 	if err := app.store.Posts.Update(r.Context(), &post); err != nil {
-		if errors.Is(err, store.ErrNotFound) {
+		if errors.Is(err, store.ErrEditConflict) {
+			writeJsonError(w, http.StatusConflict, err.Error())
+		} else if errors.Is(err, store.ErrNotFound) {
 			app.NotFoundResponse(w, r, err)
 		} else {
 			app.internalServerError(w, r, err)

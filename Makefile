@@ -24,3 +24,7 @@ migrate-up:
 migrate-down:
 	@migrate -path="$(MIGRATIONS_PATH)" -database="$(DB_MIGRATOR_ADDR)" down $(or $(STEPS),$(MIGRATION_ARGS))
 
+
+.PHONY: seed
+seed:
+	@go run ./cmd/migrate/seed

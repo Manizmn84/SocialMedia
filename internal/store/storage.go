@@ -4,10 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 )
 
+// QueryTimeoutDuration bounds each store operation, including an entire delete transaction.
+const QueryTimeoutDuration = 5 * time.Second
+
 var (
-	ErrNotFound = errors.New("resource not found")
+	ErrNotFound     = errors.New("resource not found")
+	ErrEditConflict = errors.New("post has changed or been deleted; reload and try again")
 )
 
 type Storage struct {
