@@ -3,7 +3,11 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
+
+var Validate = validator.New(validator.WithRequiredStructEnabled())
 
 func writeJson(w http.ResponseWriter, status int, data any) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -26,5 +30,13 @@ func writeJsonError(w http.ResponseWriter, status int, message string) error {
 		Error string `json:"error"`
 	}
 
-	return writeJson(w, http.StatusInternalServerError, envelope{Error: message})
+	return writeJson(w, status, envelope{Error: message})
+}
+
+func jsonResponse(w http.ResponseWriter, status int, data any) error {
+	type envelope struct {
+		Data any `json:"data"`
+	}
+
+	return writeJson(w, status, envelope{Data: data})
 }
